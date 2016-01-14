@@ -9,9 +9,16 @@ namespace Blog.Core.Repositories
   public class UserRepository
   {
     private MySqlDatabaseConnection _mySqlDatabaseConnection;
-    protected MySqlDatabaseConnection MySqlDatabaseConnection
+    
+    public UserRepository()
     {
-      get { return _mySqlDatabaseConnection ?? (_mySqlDatabaseConnection = new MySqlDatabaseConnection()); }
+      IntitializeDb();
+    }
+
+    private void IntitializeDb()
+    {
+      _mySqlDatabaseConnection = new MySqlDatabaseConnection();
+      _mySqlDatabaseConnection.MySqlConnection.Open();
     }
 
     public List<User> GetAllUsers()
@@ -21,8 +28,7 @@ namespace Blog.Core.Repositories
 
       try
       {
-        MySqlDatabaseConnection.MySqlConnection.Open();
-        using (var command = new MySqlCommand(query, MySqlDatabaseConnection.MySqlConnection))
+        using (var command = new MySqlCommand(query, _mySqlDatabaseConnection.MySqlConnection))
         {
           using (var reader = command.ExecuteReader())
           {
@@ -41,11 +47,7 @@ namespace Blog.Core.Repositories
       {
         return null;
       }
-      finally
-      {
-        MySqlDatabaseConnection.MySqlConnection.Close();
-      }
-
+      
       return users;
     }
 
@@ -55,16 +57,19 @@ namespace Blog.Core.Repositories
 
       try
       {
-        MySqlDatabaseConnection.MySqlConnection.Open();
-        using (var command = new MySqlCommand(query, MySqlDatabaseConnection.MySqlConnection))
+        using (var command = new MySqlCommand(query, _mySqlDatabaseConnection.MySqlConnection))
         {
           command.Parameters.AddWithValue("@userId", userId);
           using (var reader = command.ExecuteReader())
           {
-            var user = new User();
-            user.FirstName = reader["FirstName"].ToString();
-            user.LastName = reader["LastName"].ToString();
-            user.UserId = (int) reader["UserId"];
+            reader.Read();
+            var user = new User
+            {
+              FirstName = reader["FirstName"].ToString(),
+              LastName = reader["LastName"].ToString(),
+              UserId = (int) reader["UserId"]
+            };
+
             return user;
           }
         }
@@ -73,9 +78,22 @@ namespace Blog.Core.Repositories
       {
         return null;
       }
-      finally
+    }
+
+    public void Dispose()
+    {
+      Dispose(true);
+    }
+
+    public void Dispose(bool disposing)
+    {
+      if (disposing)
       {
-        MySqlDatabaseConnection.MySqlConnection.Close();
+        if (_mySqlDatabaseConnection.MySqlConnection.State == System.Data.ConnectionState.Open)
+        {
+          _mySqlDatabaseConnection.MySqlConnection.Close();
+          _mySqlDatabaseConnection.MySqlConnection.Dispose();
+        }
       }
     }
   }
