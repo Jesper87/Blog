@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@using System.Security.Claims
+<!DOCTYPE html>
 <html>
     <head>
         <meta charset="utf-8" />
@@ -32,11 +33,16 @@
                     <a asp-controller="Home" asp-action="Index" class="navbar-brand">Blog.Website</a>
                 </div>
                 <div class="navbar-collapse collapse">
-                    <ul class="nav navbar-nav">
-                        <li><a asp-controller="Home" asp-action="Index">Home</a></li>
-                        <li><a asp-controller="Home" asp-action="About">About</a></li>
-                        <li><a asp-controller="Home" asp-action="Contact">Contact</a></li>
-                    </ul>
+                  <ul class="nav navbar-nav">
+                    <li><a asp-controller="Home" asp-action="Index">Home</a></li>
+                    <li><a asp-controller="Home" asp-action="About">About</a></li>
+                    <li><a asp-controller="Home" asp-action="Contact">Contact</a></li>
+                    @if (User.IsSignedIn())
+                    {
+                      <li><a asp-controller="Blog" asp-action="Index">Blog Management</a></li>
+                    }
+                  </ul>
+
                     @await Html.PartialAsync("_LoginPartial")
                 </div>
             </div>
